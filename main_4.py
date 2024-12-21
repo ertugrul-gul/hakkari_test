@@ -4,9 +4,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error, mean_squared_error
-from xgboost import XGBRegressor
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.ensemble import RandomForestRegressor
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 import matplotlib.dates as mdates
+import warnings
+warnings.filterwarnings("ignore")
 
 # NetCDF dosya yolunu belirtin
 file_path = "C:/Users/ertu_/Desktop/test/data_H/Data_0.nc"
@@ -18,12 +23,14 @@ ds = xr.open_dataset(file_path)
 df = ds[['t2m', 'u10', 'v10']].to_dataframe().reset_index()
 df['valid_time'] = pd.to_datetime(df['valid_time'], errors='coerce')
 
-# Geçersiz tarihleri kaldır
-valid_dates = df.dropna(subset=['valid_time']).sort_values('valid_time').reset_index(drop=True)
+# Geçersiz tarihleri ve satırları kaldır
+valid_dates = df.dropna(subset=['valid_time', 'latitude', 'longitude']).sort_values('valid_time').reset_index(drop=True)
 
 # Rüzgar hızını ve yönünü hesapla
 valid_dates['wind_speed'] = np.sqrt(valid_dates['u10']**2 + valid_dates['v10']**2)
 valid_dates['wind_dir'] = np.arctan2(valid_dates['v10'], valid_dates['u10']) * (180 / np.pi)
+# 0-360 derece aralığına dönüştür
+valid_dates['wind_dir'] = (valid_dates['wind_dir'] + 360) % 360
 
 # Sıcaklığı Kelvin'den Celsius'a dönüştür
 valid_dates['temperature'] = valid_dates['t2m'] - 273.15
@@ -41,57 +48,127 @@ test_data = valid_dates[(valid_dates['valid_time'] >= "2000-01-01") & (valid_dat
 X_test = test_data[['wind_speed', 'wind_dir']]
 y_test = test_data['temperature']
 
-# Geleceğe yönelik tahmin aralığı oluştur
+# Geleceğe yönelik tahmin aralığı oluştur (Şimdilik XGBoost'taki gibi kalsın, ARIMA için güncellenecek)
 future_dates = pd.date_range(start="2025-01-01", end="2100-12-31", freq='Q')
 X_future = pd.DataFrame({
-    'wind_speed': np.random.uniform(X_test['wind_speed'].min(), X_test['wind_speed'].max(), len(future_dates)),
-    'wind_dir': np.random.uniform(X_test['wind_dir'].min(), X_test['wind_dir'].max(), len(future_dates))
+    'wind_speed': np.random.choice(X_test['wind_speed'], size=len(future_dates)),
+    'wind_dir': np.random.choice(X_test['wind_dir'], size=len(future_dates))
 })
 
-# XGBoost Modeli
-model_xgb = XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
-model_xgb.fit(X_train, y_train)
+#----------------------------------------
+# Random Forest Modeli
+#----------------------------------------
+model_rf = RandomForestRegressor(n_estimators=100, random_state=42)
+model_rf.fit(X_train, y_train)
 
-# Tahminleri Mevsimlik Ortalama ile Hesaplama
-forecast_xgb = model_xgb.predict(X_test)
-forecast_xgb_future = model_xgb.predict(X_future)
+# Test seti üzerinde tahminler
+forecast_rf = model_rf.predict(X_test)
+forecast_rf_future = model_rf.predict(X_future)
 
-forecast_xgb = pd.DataFrame({
+forecast_rf = pd.DataFrame({
     'valid_time': test_data['valid_time'].values,
-    'predicted_temperature': forecast_xgb
+    'predicted_temperature': forecast_rf
 })
-forecast_xgb['valid_time'] = pd.to_datetime(forecast_xgb['valid_time'], errors='coerce')
-forecast_xgb = forecast_xgb.set_index('valid_time')
+forecast_rf = forecast_rf.set_index('valid_time')
 
 # Gelecekteki tahminleri ekle
-future_forecast_xgb = pd.DataFrame({
+future_forecast_rf = pd.DataFrame({
     'valid_time': future_dates,
-    'predicted_temperature': forecast_xgb_future
+    'predicted_temperature': forecast_rf_future
 })
-future_forecast_xgb = future_forecast_xgb.set_index('valid_time')
+future_forecast_rf = future_forecast_rf.set_index('valid_time')
+
+#----------------------------------------
+# ARIMA Modeli
+#----------------------------------------
+# Eğitim verilerini mevsimlik olarak ayrıştır
+y_train_ts = y_train.copy()
+y_train_ts.index = pd.to_datetime(train_data['valid_time'], errors='coerce')
+y_train_ts = y_train_ts.resample('M').mean() # Aylık ortalamaya indirge
+
+# Durağanlık kontrolü (Augmented Dickey-Fuller Testi)
+result = adfuller(y_train_ts)
+print('ADF Statistic: %f' % result[0])
+print('p-value: %f' % result[1])
+
+# ACF ve PACF grafikleri
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+plot_acf(y_train_ts, lags=20, ax=axes[0])
+plot_pacf(y_train_ts, lags=20, ax=axes[1])
+plt.show()
+
+# ARIMA modelini oluştur (p, d, q değerlerini ACF ve PACF grafiklerine göre belirleyin)
+# Örnek olarak (p=2, d=1, q=2) ve mevsimsellik için (P=1, D=1, Q=1, s=12) kullanılmıştır.
+# Bu değerleri kendi verinize göre ayarlamanız gerekir.
+order = (2, 1, 2)
+seasonal_order = (1, 1, 1, 12)
+model_arima = SARIMAX(y_train_ts, order=order, seasonal_order=seasonal_order)
+model_arima_fit = model_arima.fit(disp=False)
+
+# Test verisi için tahmin aralığını oluştur
+test_dates = pd.date_range(start="2000-01-01", end="2024-12-31", freq='M')
+
+# Test seti için tahminler
+forecast_arima = model_arima_fit.predict(start=len(y_train_ts), end=len(y_train_ts) + len(test_dates)-1)
+forecast_arima.index = test_dates
+
+# Gelecekteki tahminler için dinamik tahminler kullan (önceki tahminleri kullanarak)
+forecast_arima_future = model_arima_fit.predict(start=len(y_train_ts) + len(test_dates), end=len(y_train_ts) + len(test_dates) + len(future_dates)-1, dynamic=True)
+forecast_arima_future.index = future_dates
+
+#----------------------------------------
+# Modellerin Değerlendirilmesi ve Grafik
+#----------------------------------------
 
 # Gerçek değerlerin mevsimlik ortalamasını al
 actual_seasonal = y_test.copy()
 actual_seasonal.index = pd.to_datetime(test_data['valid_time'], errors='coerce')
 actual_seasonal = actual_seasonal.resample('Q').mean()
 
-# Tahminlerin mevsimlik ortalamasını al
-tahmin_seasonal = pd.concat([forecast_xgb, future_forecast_xgb]).resample('Q').mean()
+# Tahminlerin mevsimlik ortalamasını al (Random Forest)
+tahmin_seasonal_rf = pd.concat([forecast_rf, future_forecast_rf]).resample('Q').mean()
+
+# Tahminlerin mevsimlik ortalamasını al (ARIMA)
+tahmin_seasonal_arima = pd.concat([forecast_arima, forecast_arima_future]).resample('Q').mean()
+
+# Model değerlendirmesi (Test seti üzerinde)
+y_pred_rf = model_rf.predict(X_test)
+y_pred_arima = forecast_arima
+
+mae_rf = mean_absolute_error(y_test, y_pred_rf)
+rmse_rf = np.sqrt(mean_squared_error(y_test, y_pred_rf))
+r2_rf = r2_score(y_test, y_pred_rf)
+
+mae_arima = mean_absolute_error(actual_seasonal.loc[forecast_arima.index], y_pred_arima)  
+rmse_arima = np.sqrt(mean_squared_error(actual_seasonal.loc[forecast_arima.index], y_pred_arima))
+r2_arima = r2_score(actual_seasonal.loc[forecast_arima.index], y_pred_arima)
+
+print("Random Forest:")
+print(f"MAE: {mae_rf:.2f}")
+print(f"RMSE: {rmse_rf:.2f}")
+print(f"R-kare: {r2_rf:.2f}")
+
+print("\nARIMA:")
+print(f"MAE: {mae_arima:.2f}")
+print(f"RMSE: {rmse_arima:.2f}")
+print(f"R-kare: {r2_arima:.2f}")
 
 # Grafik Çizimi
-plt.figure(figsize=(15, 8))
+plt.figure(figsize=(15, 8), dpi=100)
 plt.plot(actual_seasonal.index, actual_seasonal, label="Gerçek Mevsimlik Ortalama", color='blue', alpha=0.7)
-plt.plot(tahmin_seasonal.index, tahmin_seasonal, label="XGBoost Mevsimlik Tahmini", color='red', alpha=0.7)
-plt.title("2000-2100 Mevsimlik Ortalama Sıcaklık Tahmini - XGBoost")
+plt.plot(tahmin_seasonal_rf.index, tahmin_seasonal_rf, label="Random Forest Mevsimlik Tahmini", color='green', alpha=0.7)
+plt.plot(tahmin_seasonal_arima.index, tahmin_seasonal_arima, label="ARIMA Mevsimlik Tahmini", color='orange', alpha=0.7)
+
+plt.title("2000-2100 Mevsimlik Ortalama Sıcaklık Tahmini")
 plt.xlabel("Yıllar")
 plt.ylabel("Sıcaklık (°C)")
 
 # Tarih formatlama
-plt.gca().xaxis.set_major_locator(mdates.YearLocator(10))  # Her 10 yılda bir
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y'))  # Yılları göster
+plt.gca().xaxis.set_major_locator(mdates.YearLocator(10))
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
 
-# Mevsimleri göstergede tanımla
-plt.legend(title="Mevsimler", labels=["Gerçek Mevsimlik Ortalama - Kış/İlkbahar/Yaz/Sonbahar", "XGBoost Mevsimlik Tahmini - Kış/İlkbahar/Yaz/Sonbahar"])
+# Gösterge
+plt.legend()
 
 plt.xticks(rotation=45)
 plt.grid(True)
