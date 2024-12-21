@@ -1,0 +1,1 @@
+# NetCDF dosya yolunu belirtin
