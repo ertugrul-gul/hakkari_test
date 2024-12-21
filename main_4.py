@@ -11,10 +11,14 @@ from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 import matplotlib.dates as mdates
 import warnings
+import os  # os modülünü ekledik
+
 warnings.filterwarnings("ignore")
 
-# NetCDF dosya yolunu belirtin
-file_path = "C:/Users/ertu_/Desktop/test/data_H/Data_0.nc"
+# NetCDF dosya yolunu platform bağımsız yap
+project_dir = os.path.dirname(os.path.abspath(__file__))
+relative_path = os.path.join("data_H", "Data_0.nc")
+file_path = os.path.join(project_dir, relative_path)
 
 # NetCDF dosyasını yükle
 ds = xr.open_dataset(file_path)
