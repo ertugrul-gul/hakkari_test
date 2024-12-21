@@ -133,15 +133,25 @@ tahmin_seasonal_arima = pd.concat([forecast_arima, forecast_arima_future]).resam
 
 # Model değerlendirmesi (Test seti üzerinde)
 y_pred_rf = model_rf.predict(X_test)
-y_pred_arima = forecast_arima
+
+# ARIMA için: actual_seasonal'ı reindex ile düzenle
+# ARIMA tahminlerinin başlangıç ve bitiş tarihlerini al
+arima_start_date = forecast_arima.index.min()
+arima_end_date = forecast_arima.index.max()
+
+# actual_seasonal'ı ARIMA tahminlerinin tarih aralığına göre filtrele
+actual_seasonal = actual_seasonal[(actual_seasonal.index >= arima_start_date) & (actual_seasonal.index <= arima_end_date)]
+
+# actual_seasonal'ı forecast_arima.index ile aynı indekse sahip olacak şekilde yeniden indeksle
+actual_seasonal = actual_seasonal.reindex(forecast_arima.index)
 
 mae_rf = mean_absolute_error(y_test, y_pred_rf)
 rmse_rf = np.sqrt(mean_squared_error(y_test, y_pred_rf))
 r2_rf = r2_score(y_test, y_pred_rf)
 
-mae_arima = mean_absolute_error(actual_seasonal.loc[forecast_arima.index], y_pred_arima)  
-rmse_arima = np.sqrt(mean_squared_error(actual_seasonal.loc[forecast_arima.index], y_pred_arima))
-r2_arima = r2_score(actual_seasonal.loc[forecast_arima.index], y_pred_arima)
+mae_arima = mean_absolute_error(actual_seasonal, forecast_arima)
+rmse_arima = np.sqrt(mean_squared_error(actual_seasonal, forecast_arima))
+r2_arima = r2_score(actual_seasonal, forecast_arima)
 
 print("Random Forest:")
 print(f"MAE: {mae_rf:.2f}")
