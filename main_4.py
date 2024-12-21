@@ -145,23 +145,78 @@ actual_seasonal = actual_seasonal[(actual_seasonal.index >= arima_start_date) & 
 # actual_seasonal'ı forecast_arima.index ile aynı indekse sahip olacak şekilde yeniden indeksle
 actual_seasonal = actual_seasonal.reindex(forecast_arima.index)
 
+# NaN değerlerini ffill ile doldur
+actual_seasonal = actual_seasonal.fillna(method='ffill')
+
+# Kalan NaN değerlerini kaldır
+actual_seasonal = actual_seasonal.dropna()
+
 mae_rf = mean_absolute_error(y_test, y_pred_rf)
 rmse_rf = np.sqrt(mean_squared_error(y_test, y_pred_rf))
 r2_rf = r2_score(y_test, y_pred_rf)
 
-mae_arima = mean_absolute_error(actual_seasonal, forecast_arima)
-rmse_arima = np.sqrt(mean_squared_error(actual_seasonal, forecast_arima))
-r2_arima = r2_score(actual_seasonal, forecast_arima)
+mae_arima = mean_absolute_error(actual_seasonal, forecast_arima.loc[actual_seasonal.index])
+rmse_arima = np.sqrt(mean_squared_error(actual_seasonal, forecast_arima.loc[actual_seasonal.index]))
+r2_arima = r2_score(actual_seasonal, forecast_arima.loc[actual_seasonal.index])
 
-print("Random Forest:")
-print(f"MAE: {mae_rf:.2f}")
-print(f"RMSE: {rmse_rf:.2f}")
-print(f"R-kare: {r2_rf:.2f}")
+print("--------------------------------------------------")
+print("Model Değerlendirme Sonuçları:")
+print("--------------------------------------------------")
+
+print("\nRandom Forest:")
+print(f"  MAE: {mae_rf:.2f}")
+print(f"  RMSE: {rmse_rf:.2f}")
+print(f"  R-kare: {r2_rf:.2f}")
 
 print("\nARIMA:")
-print(f"MAE: {mae_arima:.2f}")
-print(f"RMSE: {rmse_arima:.2f}")
-print(f"R-kare: {r2_arima:.2f}")
+print(f"  MAE: {mae_arima:.2f}")
+print(f"  RMSE: {rmse_arima:.2f}")
+print(f"  R-kare: {r2_arima:.2f}")
+
+
+# Model karşılaştırma
+print("\n--------------------------------------------------")
+print("Model Karşılaştırması ve Yorum:")
+print("--------------------------------------------------")
+if mae_rf < mae_arima:
+    print("Random Forest, ARIMA'ya göre daha düşük MAE'ye sahip. Bu, Random Forest'in ortalama olarak daha doğru tahminler yaptığını gösterir.")
+elif mae_arima < mae_rf:
+      print("ARIMA, Random Forest'e göre daha düşük MAE'ye sahip. Bu, ARIMA'nın ortalama olarak daha doğru tahminler yaptığını gösterir.")
+else:
+    print("Random Forest ve ARIMA'nın MAE değerleri birbirine yakın.")
+if rmse_rf < rmse_arima:
+    print("Random Forest, ARIMA'ya göre daha düşük RMSE'ye sahip. Bu, Random Forest'in büyük hataları cezalandırmada daha iyi olduğunu gösterir.")
+elif rmse_arima < rmse_rf:
+    print("ARIMA, Random Forest'e göre daha düşük RMSE'ye sahip. Bu, ARIMA'nın büyük hataları cezalandırmada daha iyi olduğunu gösterir.")
+else:
+     print("Random Forest ve ARIMA'nın RMSE değerleri birbirine yakın.")
+if r2_rf > r2_arima:
+    print("Random Forest, ARIMA'ya göre daha yüksek R-kare değerine sahip. Bu, Random Forest'in varyansı açıklama konusunda daha iyi olduğunu gösterir.")
+elif r2_arima > r2_rf:
+     print("ARIMA, Random Forest'e göre daha yüksek R-kare değerine sahip. Bu, ARIMA'nın varyansı açıklama konusunda daha iyi olduğunu gösterir.")
+else:
+     print("Random Forest ve ARIMA'nın R-kare değerleri birbirine yakın.")
+
+
+# Model seçim yorumu
+print("\n--------------------------------------------------")
+print("Model Seçim Yorumu:")
+print("--------------------------------------------------")
+
+if (mae_rf < mae_arima and rmse_rf < rmse_arima and r2_rf > r2_arima):
+      print("Genel olarak, Random Forest, bu veriler için daha uygun bir model gibi görünmektedir. Metrikler açısından daha iyi sonuçlar vermiştir.")
+elif (mae_arima < mae_rf and rmse_arima < rmse_rf and r2_arima > r2_rf):
+    print("Genel olarak, ARIMA, bu veriler için daha uygun bir model gibi görünmektedir. Metrikler açısından daha iyi sonuçlar vermiştir.")
+elif (mae_rf < mae_arima and rmse_rf < rmse_arima) or (mae_arima < mae_rf and rmse_arima < rmse_rf):
+    print("MAE ve RMSE değerlerine bakıldığında, bu veriler için bir model diğerine göre hafifçe daha uygun görünmektedir.")
+elif r2_rf > r2_arima:
+      print("R-kare değerine göre, Random Forest bu verilerin varyansını açıklama konusunda daha iyi performans göstermektedir.")
+elif r2_arima > r2_rf:
+      print("R-kare değerine göre, ARIMA bu verilerin varyansını açıklama konusunda daha iyi performans göstermektedir.")
+else:
+      print("Random Forest ve ARIMA modelleri metrikler açısından benzer performans sergilemektedir. İhtiyaçlarınıza ve modelin yorumlanabilirliğine göre bir seçim yapabilirsiniz.")
+
+print("\nModel seçimi yaparken verinizin özelliklerini, modellerin yorumlanabilirliğini ve analiz hedeflerinizi göz önünde bulundurmanız önemlidir. Bu sonuçlar, sadece bu veri seti ve bu model parametreleri için geçerlidir. Farklı parametreler ve veriler için farklı sonuçlar elde edebilirsiniz.")
 
 # Grafik Çizimi
 plt.figure(figsize=(15, 8), dpi=100)
