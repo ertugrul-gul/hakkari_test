@@ -11,10 +11,14 @@ from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 import matplotlib.dates as mdates
 import warnings
+import os  # os modülünü ekledik
+
 warnings.filterwarnings("ignore")
 
-# NetCDF dosya yolunu belirtin
-file_path = "C:/Users/ertu_/Desktop/test/data_H/Data_0.nc"
+# NetCDF dosya yolunu platform bağımsız yap
+project_dir = os.path.dirname(os.path.abspath(__file__))
+relative_path = os.path.join("data_H", "Data_0.nc")
+file_path = os.path.join(project_dir, relative_path)
 
 # NetCDF dosyasını yükle
 ds = xr.open_dataset(file_path)
@@ -97,22 +101,13 @@ plot_acf(y_train_ts, lags=20, ax=axes[0])
 plot_pacf(y_train_ts, lags=20, ax=axes[1])
 plt.show()
 
-# SARIMA modelini oluştur (p, d, q) ve (P, D, Q, s) değerlerini yukarıdaki tahminlere göre belirleyin
-order = (1, 0, 1) # Daha basit bir parametre kombinasyonu
-seasonal_order = (1, 0, 1, 12) # Daha basit bir parametre kombinasyonu
-
+# ARIMA modelini oluştur (p, d, q değerlerini ACF ve PACF grafiklerine göre belirleyin)
+# Örnek olarak (p=2, d=1, q=2) ve mevsimsellik için (P=1, D=1, Q=1, s=12) kullanılmıştır.
+# Bu değerleri kendi verinize göre ayarlamanız gerekir.
+order = (2, 1, 2)
+seasonal_order = (1, 1, 1, 12)
 model_arima = SARIMAX(y_train_ts, order=order, seasonal_order=seasonal_order)
-try:
-    model_arima_fit = model_arima.fit(disp=False, method='lbfgs', maxiter=1000)  # Farklı bir optimizasyon algoritması deneyin ve iterasyonu artırın
-except np.linalg.LinAlgError as e:
-    print(f"Hata: {e}")
-    print("Model optimizasyonu sırasında bir hata oluştu. Farklı parametreler veya optimizasyon ayarları deneyin.")
-    # Bu noktada farklı bir model veya parametre kombinasyonu denemek mantıklı olabilir.
-    # Örneğin: 
-    # order = (2, 0, 1) # Deneme
-    # model_arima = SARIMAX(y_train_ts, order=order, seasonal_order=seasonal_order)
-    # model_arima_fit = model_arima.fit(disp=False, method='powell', maxiter=1000) 
-    exit() # Hata durumunda kodu durdur
+model_arima_fit = model_arima.fit(disp=False)
 
 # Test verisi için tahmin aralığını oluştur
 test_dates = pd.date_range(start="2000-01-01", end="2024-12-31", freq='M')
