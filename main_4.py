@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 
 # NetCDF dosya yolunu platform bağımsız yap
 project_dir = os.path.dirname(os.path.abspath(__file__))
-relative_path = os.path.join("data_H", "Data_0.nc")
+relative_path = os.path.join("data_H", "monthly", "Data_0.nc")
 file_path = os.path.join(project_dir, relative_path)
 
 # NetCDF dosyasını yükle
