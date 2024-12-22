@@ -5,27 +5,9 @@ import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout
+from keras.models import Sequential
+from keras.layers import LSTM, Dense, Dropout
 from sklearn.impute import SimpleImputer
-
-# Sanal Ortam ve Gereklilikler için Kontrol
-def create_virtual_env():
-    system = platform.system()
-    if not os.path.exists('lstm_env'):
-        print("Sanal ortam oluşturuluyor...")
-        os.system('python -m venv lstm_env')
-        if system == "Windows":
-            print("Sanal ortam oluşturuldu. Aktivasyon için aşağıdaki komutu kullanın:")
-            print("lstm_env\\Scripts\\activate")
-        else:
-            print("Sanal ortam oluşturuldu. Aktivasyon için aşağıdaki komutu kullanın:")
-            print("source lstm_env/bin/activate")
-        print("Sonrasında bağımlılıkları yükleyin:")
-        print("pip install numpy pandas xarray matplotlib scikit-learn tensorflow")
-        exit()
-
-create_virtual_env()
 
 # Veri Yükleme
 data_path = 'data_H/final_merged_data.nc'  # Dosya yolu
@@ -34,14 +16,30 @@ data = xr.open_dataset(data_path)
 # Değişkenleri birleştirme
 df = data.to_dataframe().reset_index()
 
+# Tarih sütununu işleme
+df['year'] = pd.to_datetime(df['time']).dt.year
+df['month'] = pd.to_datetime(df['time']).dt.month
+df['day'] = pd.to_datetime(df['time']).dt.day
+df['dayofyear'] = pd.to_datetime(df['time']).dt.dayofyear
+df['week'] = pd.to_datetime(df['time']).dt.isocalendar().week
+df['weekday'] = pd.to_datetime(df['time']).dt.weekday
+time_column = df['time']
+df = df.drop(columns=['time'])
+
 # Eksik Değerleri Doldurma
 imputer = SimpleImputer(strategy='mean')
-filled_data = imputer.fit_transform(df.dropna(axis=1, how='all'))
-df = pd.DataFrame(filled_data, columns=df.columns)
+filled_data = imputer.fit_transform(df.select_dtypes(include=[np.number]))
+df = pd.DataFrame(filled_data, columns=df.select_dtypes(include=[np.number]).columns)
+
+# Tarih sütununu geri ekleme
+df['time'] = time_column
 
 # Tarih sütunu oluşturma
 df['time'] = pd.to_datetime(df['time'])
 df.set_index('time', inplace=True)
+
+# Tarih dizinini sıralama
+df = df.sort_index()
 
 # Değişkenlerin normalize edilmesi
 scaler = MinMaxScaler()
@@ -67,8 +65,8 @@ def seasonal_split(data, season):
 def create_sequences(data, sequence_length):
     X, y = [], []
     for i in range(len(data) - sequence_length):
-        X.append(data[i:i + sequence_length, :-1])  # Tüm değişkenler (son sütun hariç)
-        y.append(data[i + sequence_length, -1])    # Sıcaklık hedef değişken
+        X.append(data[i:i + sequence_length, :])  # Tüm değişkenler
+        y.append(data[i + sequence_length, -1])  # Sıcaklık hedef değişken
     return np.array(X), np.array(y)
 
 sequence_length = 30  # 30 günlük verilerden tahmin yap
@@ -77,7 +75,17 @@ train_winter = seasonal_split(train, 'winter')
 X_train, y_train = create_sequences(train_winter.values, sequence_length)
 
 validation_winter = seasonal_split(validation, 'winter')
-X_validation, y_validation = create_sequences(validation_winter.values, sequence_length)
+if not validation_winter.empty:
+    X_validation, y_validation = create_sequences(validation_winter.values, sequence_length)
+else:
+    X_validation, y_validation = None, None
+
+# Giriş boyutlarının kontrolü
+print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
+if X_validation is not None:
+    print(f"X_validation shape: {X_validation.shape}, y_validation shape: {y_validation.shape}")
+else:
+    print("Validation data is empty, skipping validation.")
 
 # LSTM Modeli Oluşturma
 model = Sequential([
@@ -91,22 +99,27 @@ model = Sequential([
 model.compile(optimizer='adam', loss='mse')
 
 # Modeli Eğitme
-model.fit(X_train, y_train, validation_data=(X_validation, y_validation), epochs=20, batch_size=32)
+if X_validation is not None:
+    model.fit(X_train, y_train, validation_data=(X_validation, y_validation), epochs=20, batch_size=32)
+else:
+    model.fit(X_train, y_train, epochs=20, batch_size=32)
 
 # 2100 Yılı Tahmini
 test_data = train_winter[-sequence_length:].values  # Son 30 günlük veri
 predictions = []
 
 for _ in range(365):
-    X_test = test_data[-sequence_length:, :-1].reshape(1, sequence_length, -1)
+    X_test = test_data[-sequence_length:, :].reshape(1, sequence_length, -1)
     prediction = model.predict(X_test)
     predictions.append(prediction[0, 0])
-    next_row = np.append(test_data[-1, 1:], prediction)
+    next_row = np.append(test_data[-1, :-1], prediction)
     test_data = np.vstack([test_data, next_row])
 
-# Tahminlerin Mevsimlere Göre Ayrılması
-predictions = scaler.inverse_transform(np.array(predictions).reshape(-1, 1))
-predicted_df = pd.DataFrame(predictions, index=pd.date_range('2100-01-01', '2100-12-31'))
+# Tahminlerin Ters Dönüşümü
+predictions_array = np.array(predictions).reshape(-1, 1)
+predicted_df = pd.DataFrame(scaler.inverse_transform(np.hstack([np.zeros((predictions_array.shape[0], df.shape[1] - 1)), predictions_array]))[:, -1],
+                            index=pd.date_range('2100-01-01', '2100-12-31'),
+                            columns=['Predicted Temperature'])
 
 # Sonuçları Görselleştirme
 plt.figure(figsize=(10, 6))
