@@ -1,9 +1,13 @@
 # Gerekli kütüphaneleri yükle
 import xarray as xr
 import os
+import matplotlib.pyplot as plt
+import numpy as np
 
 # NetCDF dosya yolu
-file_path = "C:/Users/ertu_/Desktop/test/data_H/Data_0.nc"
+project_dir = os.path.dirname(os.path.abspath(__file__))
+relative_path = os.path.join("data_H", "monthly", "Data_0.nc")
+file_path = os.path.normpath(os.path.join(project_dir, relative_path))
 
 # Dosyanın varlığını kontrol et
 if os.path.exists(file_path):
@@ -14,30 +18,23 @@ if os.path.exists(file_path):
     print("Değişkenler:", list(ds.data_vars.keys()))
     print("Boyutlar:", list(ds.dims.keys()))
 else:
-    print("Dosya bulunamadı. Dosya yolunu kontrol edin.")
+    raise FileNotFoundError("Dosya bulunamadı. Dosya yolunu kontrol edin: {}".format(file_path))
 
-# Değişkenlerin temel özelliklerini inceleyin
+# Değişkenlerin temel özelliklerini incele
 print(ds['u10'])
 print(ds['v10'])
 print(ds['t2m'])
-
-
-import matplotlib.pyplot as plt
 
 # İlk zaman dilimindeki sıcaklık verilerini görselleştirin
 ds['t2m'].isel(valid_time=0).plot(cmap='coolwarm')
 plt.title("2 Metre Sıcaklık Haritası (Kelvin)")
 plt.show()
 
-
 # Zaman boyutuna göre ortalama sıcaklık
 ds['t2m'].mean(dim=["latitude", "longitude"]).plot()
 plt.title("Zamana Göre Ortalama Sıcaklık (Kelvin)")
 plt.ylabel("Sıcaklık (K)")
 plt.show()
-
-
-import numpy as np
 
 # İlk zaman dilimi için u10 ve v10 verilerini alın
 u = ds['u10'].isel(valid_time=0)
@@ -55,7 +52,6 @@ plt.title("Rüzgar Yönü ve Hızı")
 plt.xlabel("Boylam")
 plt.ylabel("Enlem")
 plt.show()
-
 
 # Zaman boyutunu datetime formatına çevir
 time_series = ds['t2m'].mean(dim=["latitude", "longitude"]).to_series()
