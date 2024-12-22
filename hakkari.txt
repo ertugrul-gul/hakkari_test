@@ -14,3 +14,9 @@ Specific_humidity (Özgül nem, 850 hPa):
 Geopotential (Jeopotansiyel, 850 hPa):
 U_component_of_wind (u bileşeni, 850 hPa):
 V_component_of_wind (v bileşeni, 850 hPa):
+
+
+#Sanal ortama geçiş
+.venv\\Scripts\\activate  # Windows
+source .venv/bin/activate  # macOS/Linux
+
