@@ -1,1 +1,16 @@
-westlimit=43.3065; southlimit=36.9629; eastlimit=44.8152; northlimit=37.8106
+#westlimit=43.3065; southlimit=36.9629; eastlimit=44.8152; northlimit=37.8106
+
+
+#Single Levels Veri Setinden Seçilecek Değişkenler
+2m_temperature (2 metre sıcaklık):
+Surface_pressure (Yüzey basıncı):
+10m_u_component_of_wind (10 metre rüzgarın doğu-batı bileşeni):
+10m_v_component_of_wind (10 metre rüzgarın kuzey-güney bileşeni):
+Total_precipitation (Toplam yağış):
+
+Pressure Levels Veri Setinden Seçilecek Değişkenler
+Temperature (Sıcaklık, 850 hPa):
+Specific_humidity (Özgül nem, 850 hPa):
+Geopotential (Jeopotansiyel, 850 hPa):
+U_component_of_wind (u bileşeni, 850 hPa):
+V_component_of_wind (v bileşeni, 850 hPa):
