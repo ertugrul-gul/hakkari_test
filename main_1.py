@@ -1,9 +1,17 @@
 # Gerekli kütüphaneleri yükle
 import xarray as xr
 import pandas as pd
+import os
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+import matplotlib.pyplot as plt
 
-# NetCDF dosya yolunu belirtin
-file_path = "C:/Users/ertu_/Desktop/test/data_H/Data_0.nc"
+# NetCDF dosya yolunu platform bağımsız yap
+project_dir = os.path.dirname(os.path.abspath(__file__))
+relative_path = os.path.join("data_H", "monthly", "Data_0.nc")
+file_path = os.path.join(project_dir, relative_path)
 
 # NetCDF dosyasını yükle
 ds = xr.open_dataset(file_path)
@@ -14,11 +22,7 @@ df = ds[['t2m', 'u10', 'v10']].to_dataframe().reset_index()
 # İlk satırları görüntüle
 print(df.head())
 
-
-
-
 # Rüzgar hızını ve yönünü hesapla
-import numpy as np
 
 # Rüzgar hızını hesapla
 df['wind_speed'] = np.sqrt(df['u10']**2 + df['v10']**2)
@@ -33,21 +37,12 @@ df['temperature'] = df['t2m'] - 273.15
 df.drop(columns=['t2m', 'u10', 'v10'], inplace=True)
 print(df.head())
 
-
-
-from sklearn.model_selection import train_test_split
-
 # Girdiler ve hedef değişken
 X = df[['wind_speed', 'wind_dir']]
 y = df['temperature']
 
 # Eğitim ve test veri setlerini ayır
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-
-
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 # Model oluştur ve eğit
 model = RandomForestRegressor(n_estimators=100, random_state=42)
@@ -61,10 +56,6 @@ mae = mean_absolute_error(y_test, predictions)
 rmse = np.sqrt(mean_squared_error(y_test, predictions))
 
 print(f"MAE: {mae:.2f}, RMSE: {rmse:.2f}")
-
-
-
-import matplotlib.pyplot as plt
 
 # Gerçek ve tahmini sıcaklıkları karşılaştırma
 plt.figure(figsize=(10, 6))
