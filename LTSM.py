@@ -9,6 +9,7 @@ from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout
 from sklearn.impute import SimpleImputer
 
+
 # Veri Yükleme
 data_path = 'data_H/final_merged_data.nc'  # Dosya yolu
 data = xr.open_dataset(data_path)
