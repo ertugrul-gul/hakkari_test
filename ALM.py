@@ -12,12 +12,16 @@ from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 
 # Veri yükleme
-file_path = "data_H/final_merged_data.nc"
-data = xr.open_dataset(file_path)
+data_path_0 = 'data_H/data_0.nc'
+data_path_1 = 'data_H/data_1.nc'
+data_0 = xr.open_dataset(data_path_0)
+data_1 = xr.open_dataset(data_path_1)
+data = xr.concat([data_0, data_1], dim='time')
+
 
 # Hedef ve giriş değişkenleri
 temperature = data['t2m']
-features = data[['sp', 'u10', 'v10', 'tp', 'z', 't', 'u', 'v', 'q', 'r']]
+features = data[['sp', 'u10', 'v10', 'tp', 'valid_time', 'latitude', 'longitude',]]
 
 # Zaman aralıklarını belirleme
 train_time = slice("1940-01-01", "2000-12-31")
