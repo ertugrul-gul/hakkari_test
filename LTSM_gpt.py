@@ -107,6 +107,31 @@ if X_validation is not None:
     model.fit(X_train, y_train, validation_data=(X_validation, y_validation), epochs=20, batch_size=32)
 else:
     model.fit(X_train, y_train, epochs=20, batch_size=32)
+# EKLEME: Test Verileri için Hata Hesaplama ve Görselleştirme
+# Test setini oluşturma (2001-2024 arası kış verileri)
+test_winter = seasonal_split(validation, 'winter')
+if not test_winter.empty:
+    X_test, y_test = create_sequences(test_winter.values, sequence_length)
+else:
+    X_test, y_test = None, None
+
+# Modeli test etme
+if X_test is not None:
+    test_loss = model.evaluate(X_test, y_test, verbose=0)
+    print(f"Test MSE Loss: {test_loss}")
+    
+    # Test setine yönelik tahminler
+    y_test_pred = model.predict(X_test)
+    plt.figure(figsize=(10, 6))
+    plt.plot(y_test, label='Gerçek Değerler')
+    plt.plot(y_test_pred, label='Tahmin Edilen Değerler', linestyle='dashed')
+    plt.xlabel('Zaman')
+    plt.ylabel('Sıcaklık')
+    plt.title('Test Verisi Tahmin Karşılaştırması')
+    plt.legend()
+    plt.show()
+else:
+    print("Test verisi mevcut değil.")
 
 # 2100 Yılı Tahmini
 test_data = train_winter[-sequence_length:].values  # Son 30 günlük veri
@@ -119,14 +144,19 @@ for _ in range(365):
     next_row = np.append(test_data[-1, :-1], prediction)
     test_data = np.vstack([test_data, next_row])
 
-# Tahminlerin Ters Dönüşümü
-predictions_array = np.array(predictions).reshape(-1, 1)
-predictions_scaled = np.zeros((predictions_array.shape[0], df.shape[1]))
-predictions_scaled[:, -1] = predictions_array[:, 0]
-predictions_inverse = scaler.inverse_transform(predictions_scaled)
-predicted_df = pd.DataFrame(predictions_inverse[:, -1],
+# Tahminleri normalize edilmiş haliyle kullanma
+predicted_df = pd.DataFrame(predictions, 
                             index=pd.date_range('2100-01-01', '2100-12-31'),
                             columns=['Predicted Temperature'])
+
+# Sonuçları görselleştirme
+plt.figure(figsize=(10, 6))
+plt.plot(predicted_df, label='Tahmin Edilen Normalize Sıcaklık (2100)')
+plt.xlabel('Tarih')
+plt.ylabel('Normalize Sıcaklık')
+plt.title('2100 Yılı Günlük Normalize Sıcaklık Tahmini')
+plt.legend()
+plt.show()
 
 # Sonuçları Görselleştirme
 plt.figure(figsize=(10, 6))
