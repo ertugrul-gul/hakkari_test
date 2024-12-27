@@ -10,7 +10,6 @@ from keras.layers import LSTM, Dense, Dropout
 from sklearn.impute import SimpleImputer
 
 # Veri Yükleme
-# İki dosyayı birleştirerek işlem yapacağız
 data_path_0 = 'data_H/data_0.nc'
 data_path_1 = 'data_H/data_1.nc'
 data_0 = xr.open_dataset(data_path_0)
@@ -69,11 +68,11 @@ def seasonal_split(data, season):
 def create_sequences(data, sequence_length):
     X, y = [], []
     for i in range(len(data) - sequence_length):
-        X.append(data[i:i + sequence_length, :])  # Tüm değişkenler
-        y.append(data[i + sequence_length, -1])  # Sıcaklık hedef değişken
+        X.append(data[i:i + sequence_length, :])
+        y.append(data[i + sequence_length, -1])
     return np.array(X), np.array(y)
 
-sequence_length = 30  # 30 günlük verilerden tahmin yap
+sequence_length = 30
 
 train_winter = seasonal_split(train, 'winter')
 X_train, y_train = create_sequences(train_winter.values, sequence_length)
@@ -83,13 +82,6 @@ if not validation_winter.empty:
     X_validation, y_validation = create_sequences(validation_winter.values, sequence_length)
 else:
     X_validation, y_validation = None, None
-
-# Giriş boyutlarının kontrolü
-print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
-if X_validation is not None:
-    print(f"X_validation shape: {X_validation.shape}, y_validation shape: {y_validation.shape}")
-else:
-    print("Validation data is empty, skipping validation.")
 
 # LSTM Modeli Oluşturma
 model = Sequential([
@@ -107,8 +99,24 @@ if X_validation is not None:
     model.fit(X_train, y_train, validation_data=(X_validation, y_validation), epochs=20, batch_size=32)
 else:
     model.fit(X_train, y_train, epochs=20, batch_size=32)
-# EKLEME: Test Verileri için Hata Hesaplama ve Görselleştirme
-# Test setini oluşturma (2001-2024 arası kış verileri)
+
+# Doğrulama setine yönelik tahminler
+if X_validation is not None:
+    y_validation_pred = model.predict(X_validation)
+
+    # Grafik oluşturma
+    plt.figure(figsize=(10, 6))
+    plt.plot(y_validation, label='Gerçek Değerler')
+    plt.plot(y_validation_pred, label='Tahmin Edilen Değerler', linestyle='dashed')
+    plt.xlabel('Zaman')
+    plt.ylabel('Sıcaklık')
+    plt.title('Model Doğrulaması - Gerçek ve Tahmin Değerleri')
+    plt.legend()
+    plt.show()
+else:
+    print("Doğrulama verisi mevcut değil, grafik çizilemiyor.")
+
+# Test seti oluşturma
 test_winter = seasonal_split(validation, 'winter')
 if not test_winter.empty:
     X_test, y_test = create_sequences(test_winter.values, sequence_length)
@@ -119,8 +127,7 @@ else:
 if X_test is not None:
     test_loss = model.evaluate(X_test, y_test, verbose=0)
     print(f"Test MSE Loss: {test_loss}")
-    
-    # Test setine yönelik tahminler
+
     y_test_pred = model.predict(X_test)
     plt.figure(figsize=(10, 6))
     plt.plot(y_test, label='Gerçek Değerler')
@@ -134,7 +141,7 @@ else:
     print("Test verisi mevcut değil.")
 
 # 2100 Yılı Tahmini
-test_data = train_winter[-sequence_length:].values  # Son 30 günlük veri
+test_data = train_winter[-sequence_length:].values
 predictions = []
 
 for _ in range(365):
@@ -155,14 +162,5 @@ plt.plot(predicted_df, label='Tahmin Edilen Normalize Sıcaklık (2100)')
 plt.xlabel('Tarih')
 plt.ylabel('Normalize Sıcaklık')
 plt.title('2100 Yılı Günlük Normalize Sıcaklık Tahmini')
-plt.legend()
-plt.show()
-
-# Sonuçları Görselleştirme
-plt.figure(figsize=(10, 6))
-plt.plot(predicted_df, label='Tahmin Edilen Sıcaklık (2100)')
-plt.xlabel('Tarih')
-plt.ylabel('Sıcaklık')
-plt.title('2100 Yılı Günlük Sıcaklık Tahmini')
 plt.legend()
 plt.show()
