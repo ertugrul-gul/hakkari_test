@@ -9,13 +9,18 @@ from torch.utils.data import DataLoader, Dataset
 class WeatherDataset(Dataset):
     def __init__(self, file_path, variable_name):
         self.data = xr.open_dataset(file_path)[variable_name].values
-        self.data = (self.data - np.mean(self.data)) / np.std(self.data)  # Normalize etme
+        self.mean = np.mean(self.data)
+        self.std = np.std(self.data)
+        self.data = (self.data - self.mean) / self.std  # Normalize etme
 
     def __len__(self):
         return self.data.shape[0]
 
     def __getitem__(self, idx):
         return torch.tensor(self.data[idx], dtype=torch.float32)
+
+    def denormalize(self, data):
+        return (data * self.std) + self.mean  # Denormalize işlemi
 
 # Basit bir FourCastNet model mimarisi
 class FourCastNet(nn.Module):
@@ -120,18 +125,53 @@ with torch.no_grad():
     predicted_output = model(sample_input).squeeze(0).squeeze(0).numpy()
     actual_output = sample_input.squeeze(0).squeeze(0).numpy()
 
+# Denormalize tahmin ve gerçek değerler
+denormalized_predicted = dataset.denormalize(predicted_output)
+denormalized_actual = dataset.denormalize(actual_output)
+
 plt.figure(figsize=(12, 6))
 plt.subplot(1, 2, 1)
-plt.imshow(actual_output, cmap="coolwarm")
-plt.title("Actual")
+plt.imshow(denormalized_actual, cmap="coolwarm")
+plt.title("Actual (Denormalized)")
 plt.colorbar()
 
 plt.subplot(1, 2, 2)
-plt.imshow(predicted_output, cmap="coolwarm")
-plt.title("Predicted")
+plt.imshow(denormalized_predicted, cmap="coolwarm")
+plt.title("Predicted (Denormalized)")
 plt.colorbar()
 
 plt.show()
 
 # Modeli kaydetme
 torch.save(model.state_dict(), "fourcastnet_model.pth")
+
+# 2040 yılı için aylık ortalama sıcaklıkları çizdirme
+def plot_monthly_average_temperature(predictions, dataset, year=2040):
+    monthly_avg = []
+    days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]  # Gün sayıları
+    start_idx = 0
+
+    for days in days_in_month:
+        end_idx = start_idx + days
+        monthly_avg.append(dataset.denormalize(predictions[start_idx:end_idx]).mean())
+        start_idx = end_idx
+
+    plt.figure(figsize=(10, 6))
+    plt.bar(range(1, 13), monthly_avg, color='skyblue')
+    plt.xlabel('Aylar')
+    plt.ylabel('Ortalama Sıcaklık (°C)')
+    plt.title(f'{year} Yılı Aylık Ortalama Sıcaklıkları')
+    plt.xticks(range(1, 13), ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'])
+    plt.show()
+
+# Tahminlerden aylık ortalama sıcaklıkları çizdir
+model.eval()
+all_predictions = []
+with torch.no_grad():
+    for inputs in DataLoader(dataset, batch_size=32):
+        inputs = inputs.unsqueeze(1)
+        outputs = model(inputs)
+        all_predictions.append(outputs.squeeze().numpy())
+
+predictions = np.concatenate(all_predictions)
+plot_monthly_average_temperature(predictions, dataset)
