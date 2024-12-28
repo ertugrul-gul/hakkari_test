@@ -8,58 +8,96 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout
 from sklearn.impute import SimpleImputer
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+from scipy.interpolate import griddata
 
 # Veri yükleme
-data_path_0 = 'data_H/data_0.nc'
-data_path_1 = 'data_H/data_1.nc'
+data_path_0 = 'data_H/data_0_m.nc'
+data_path_1 = 'data_H/data_1_m.nc'
 data_0 = xr.open_dataset(data_path_0)
 data_1 = xr.open_dataset(data_path_1)
 data = xr.concat([data_0, data_1], dim='time')
 
 # Hedef ve giriş değişkenleri
-temperature = data['t2m']
-features = data[['sp', 'u10', 'v10', 'tp', 'valid_time', 'latitude', 'longitude']]
-
-# Tüm veri setini Pandas DataFrame'e dönüştürme
-df_features = features.to_dataframe().reset_index()
-df_temperature = temperature.to_dataframe().reset_index()
+temperature = data['t2m'] - 273.15  # Kelvin -> Celsius
+features = data[['u10', 'v10', 'tp', 'valid_time', 'latitude', 'longitude']]
 
 # tp değişkeninde 0 olan verileri kaldırma
-df_features = df_features[df_features['tp'] != 0]  
+df_features = features.to_dataframe().reset_index()
+df_features = df_features[df_features['tp'] != 0]
 
-# Mevsim bilgisi ekleme
-def add_season_column(df):
-    def assign_season(month):
-        if month in [12, 1, 2]:
-            return 'Winter'
-        elif month in [3, 4, 5]:
-            return 'Spring'
-        elif month in [6, 7, 8]:
-            return 'Summer'
-        elif month in [9, 10, 11]:
-            return 'Autumn'
+# t2m sütununu df_features'e ekleme
+temp_df = temperature.to_dataframe().reset_index()
+df_features = pd.merge(df_features, temp_df[['valid_time', 'latitude', 'longitude', 't2m']], on=['valid_time', 'latitude', 'longitude'], how='left')
 
-    df['month'] = pd.to_datetime(df['valid_time']).dt.month
-    df['season'] = df['month'].apply(assign_season)
-    df['year'] = pd.to_datetime(df['valid_time']).dt.year
-    return df
+# Tarih sütununu datetime formatına çevirme
+df_features['valid_time'] = pd.to_datetime(df_features['valid_time'])
+df_features['year'] = df_features['valid_time'].dt.year
+df_features['season'] = df_features['valid_time'].dt.month.map({
+    12: 'Winter', 1: 'Winter', 2: 'Winter',
+    3: 'Spring', 4: 'Spring', 5: 'Spring',
+    6: 'Summer', 7: 'Summer', 8: 'Summer',
+    9: 'Autumn', 10: 'Autumn', 11: 'Autumn'
+})
 
-# Tüm verilere mevsim bilgisi ekleme
-df_features = add_season_column(df_features)
-df_temperature = add_season_column(df_temperature)
+# Harita üzerindeki gösterim için ortalama sıcaklık
+temp_mean = data_0['t2m'].mean(dim='valid_time').values - 273.15  # Kelvin -> Celsius
+lons = data_0['longitude'].values
+lats = data_0['latitude'].values
 
-# Verilerin ilk birkaç satırını inceleme
-print(df_features.head())
-print(df_temperature.head())
+# Grid verilerini interpolasyon ile genişletme
+lon2d, lat2d = np.meshgrid(lons, lats)
+lon_new = np.linspace(lons.min(), lons.max(), 400)  # Daha yüksek çözünürlük
+lat_new = np.linspace(lats.min(), lats.max(), 400)
+lon2d_new, lat2d_new = np.meshgrid(lon_new, lat_new)
+temp_mean_interp = griddata((lon2d.flatten(), lat2d.flatten()), temp_mean.flatten(), (lon2d_new, lat2d_new), method='cubic')
 
-# Tüm yıllar için mevsimsel yağış değişiklik grafiği oluşturma
+# Türkiye sınırlarını tanımlama (tüm Türkiye haritası)
+turkey_extent = [25, 45, 35, 45]  # [min_lon, max_lon, min_lat, max_lat]
+
+# Şehir merkezlerinin koordinatları ve isimleri
+city_coordinates = {
+    "Ankara": (32.8597, 39.9334),
+    "Istanbul": (28.9784, 41.0082),
+    "Izmir": (27.1428, 38.4192),
+    "Hakkari": (43.7408, 37.5744)
+}
+
+# Harita oluşturma
+fig = plt.figure(figsize=(12, 8))
+ax = plt.axes(projection=ccrs.PlateCarree())
+ax.set_extent(turkey_extent, crs=ccrs.PlateCarree())
+
+# Türkiye'yi idari harita olarak renklendirme
+ax.add_feature(cfeature.BORDERS, linestyle=':', edgecolor='gray')  # Sınır çizgileri
+ax.add_feature(cfeature.COASTLINE, edgecolor='black')  # Sahil çizgileri
+ax.add_feature(cfeature.LAND, facecolor='lightyellow')  # Karayı açık sarı yap
+ax.add_feature(cfeature.LAKES, facecolor='lightblue')  # Gölleri mavi yap
+
+# Şehir isimlerini ekleme
+for city, coord in city_coordinates.items():
+    ax.plot(coord[0], coord[1], marker='o', color='red', markersize=5, transform=ccrs.PlateCarree())
+    ax.text(coord[0] + 0.2, coord[1], city, transform=ccrs.PlateCarree(), fontsize=10, color='black')
+
+# Hakkâri bölgesinde sıcaklık verisini gösterme
+temp_plot = ax.contourf(lon2d_new, lat2d_new, temp_mean_interp, transform=ccrs.PlateCarree(), cmap='coolwarm', levels=50, alpha=0.9)
+plt.colorbar(temp_plot, ax=ax, orientation='vertical', label='Sıcaklık (°C)')
+
+# Başlık ve açıklamalar
+plt.title("Türkiye Haritası Üzerinde Hakkâri Bölgesi Sıcaklık Dağılımı", fontsize=14)
+plt.xlabel("Boylam")
+plt.ylabel("Enlem")
+
+# Haritayı gösterme
+plt.show()
+
+# Yağış grafiği oluşturma
 def plot_precipitation_trends(df_features):
-    # Yıl ve mevsime göre toplam yağış miktarını hesaplama
     df_features['tp'] = df_features['tp'] * 1000  # Yağış birimi metre -> milimetre dönüştürüldü
     precipitation_sum = df_features.groupby(['year', 'season'])['tp'].sum().unstack()
 
     # Çubuk grafik oluşturma
-    precipitation_sum = precipitation_sum.reindex(index=range(1940, 2024))  # Yıllar 1940'tan itibaren yeniden düzenlendi
     precipitation_sum.plot(kind='bar', figsize=(14, 8), width=0.8, edgecolor='black')
     plt.title("1940'tan Günümüze Mevsimlik Yağış Miktarı")
     plt.ylabel('Toplam Yağış (mm)')
@@ -70,19 +108,13 @@ def plot_precipitation_trends(df_features):
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.show()
 
-# Yağış grafiği oluşturma
 plot_precipitation_trends(df_features)
 
-# Tüm yıllar için mevsimsel çubuk grafik oluşturma
-def plot_seasonal_trends_all_years(df_temperature):
-    # Sıcaklıkları Kelvin'den Celsius'a dönüştürme
-    df_temperature['t2m'] = df_temperature['t2m'] - 273.15  
-
-    # Yıl ve mevsime göre ortalamaları hesaplama
-    seasonal_avg = df_temperature.groupby(['year', 'season'])['t2m'].mean().unstack()
+# Sıcaklık grafiği oluşturma
+def plot_seasonal_trends_all_years(df_features):
+    seasonal_avg = df_features.groupby(['year', 'season'])['t2m'].mean().unstack()
 
     # Çubuk grafik oluşturma
-    seasonal_avg = seasonal_avg.reindex(index=range(1940, 2024)) 
     seasonal_avg.plot(kind='bar', figsize=(14, 8), width=0.8, edgecolor='black')
     plt.title("1940'tan Günümüze Mevsimlik Sıcaklık Ortalamaları")
     plt.ylabel('Ortalama Sıcaklık (°C)')
@@ -93,57 +125,4 @@ def plot_seasonal_trends_all_years(df_temperature):
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.show()
 
-# Grafik oluşturma
-plot_seasonal_trends_all_years(df_temperature)
-
-# 1991-2021 yılları arasında her ay için tablo oluşturma
-def create_monthly_statistics(df_temperature, df_features):
-    # Sıcaklık birimini Celsius'a dönüştürme
-    df_temperature['t2m'] = df_temperature['t2m']
-
-    # 1991-2021 yıllarını filtreleme
-    filtered_temp = df_temperature[(df_temperature['year'] >= 1991) & (df_temperature['year'] <= 2021)]
-    filtered_features = df_features[(df_features['year'] >= 1991) & (df_features['year'] <= 2021)]
-
-    # Yağış miktarını aylık toplam olarak hesaplama
-    monthly_precipitation = filtered_features.groupby(['year', 'month'])['tp'].sum().reset_index()
-
-    # Her ay için toplam yağış ortalamasını hesaplama
-    monthly_precipitation_avg = monthly_precipitation.groupby('month')['tp'].mean()
-
-    # Sıcaklık istatistiklerini aylık bazda hesaplama
-    monthly_stats = filtered_temp.groupby('month')['t2m'].agg(['mean', 'min', 'max']).rename(
-        columns={'mean': 'Ortalama Sıcaklık (°C)', 'min': 'Minimum Sıcaklık (°C)', 'max': 'Maksimum Sıcaklık (°C)'}
-    )
-
-    # Aylık toplam yağışları tabloya ekleme
-    monthly_stats['Yağış (mm)'] = monthly_precipitation_avg.values
-
-    # Ay isimlerini ekleme
-    month_names = {
-        1: 'Ocak', 2: 'Şubat', 3: 'Mart', 4: 'Nisan', 5: 'Mayıs', 6: 'Haziran',
-        7: 'Temmuz', 8: 'Ağustos', 9: 'Eylül', 10: 'Ekim', 11: 'Kasım', 12: 'Aralık'
-    }
-    monthly_stats.index = monthly_stats.index.map(month_names)
-
-    return monthly_stats
-
-# Tabloyu görselleştirme
-def plot_monthly_statistics_table(monthly_statistics):
-    fig, ax = plt.subplots(figsize=(12, 8))
-    ax.axis('tight')
-    ax.axis('off')
-    table = plt.table(cellText=monthly_statistics.values,
-                      colLabels=monthly_statistics.columns,
-                      rowLabels=monthly_statistics.index,
-                      loc='center',
-                      cellLoc='center')
-    table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.auto_set_column_width(col=list(range(len(monthly_statistics.columns))))
-    plt.title("1991-2021 Aylık İstatistikler", fontsize=14, pad=20)
-    plt.show()
-
-# Güncellenmiş tabloyu oluşturma ve görselleştirme
-monthly_statistics = create_monthly_statistics(df_temperature, df_features)
-plot_monthly_statistics_table(monthly_statistics)
+plot_seasonal_trends_all_years(df_features)
