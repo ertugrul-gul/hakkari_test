@@ -18,7 +18,7 @@ data = xr.concat([data_0, data_1], dim='time')
 
 # Hedef ve giriş değişkenleri
 temperature = data['t2m']
-features = data[['sp', 'u10', 'v10', 'tp', 'valid_time', 'latitude', 'longitude',]]
+features = data[['sp', 'u10', 'v10', 'tp', 'valid_time', 'latitude', 'longitude']]
 
 # Tüm veri setini Pandas DataFrame'e dönüştürme
 df_features = features.to_dataframe().reset_index()
@@ -55,7 +55,7 @@ print(df_temperature.head())
 # Tüm yıllar için mevsimsel yağış değişiklik grafiği oluşturma
 def plot_precipitation_trends(df_features):
     # Yıl ve mevsime göre toplam yağış miktarını hesaplama
-    df_features['tp'] = df_features['tp'] * 1000  # Değiştirdim: Yağış birimi metre -> milimetre dönüştürüldü
+    df_features['tp'] = df_features['tp'] * 1000  # Yağış birimi metre -> milimetre dönüştürüldü
     precipitation_sum = df_features.groupby(['year', 'season'])['tp'].sum().unstack()
 
     # Çubuk grafik oluşturma
@@ -105,22 +105,19 @@ def create_monthly_statistics(df_temperature, df_features):
     filtered_temp = df_temperature[(df_temperature['year'] >= 1991) & (df_temperature['year'] <= 2021)]
     filtered_features = df_features[(df_features['year'] >= 1991) & (df_features['year'] <= 2021)]
 
-    # Kontrol: Filtrelenmiş verilerin doğru olup olmadığını kontrol etme
-    print("Filtered Temperature Data:")
-    print(filtered_temp.head())
-    print("Filtered Features Data:")
-    print(filtered_features.head())
-    print("Temperature Data Shape:", filtered_temp.shape)
-    print("Features Data Shape:", filtered_features.shape)
+    # Yağış miktarını aylık toplam olarak hesaplama
+    monthly_precipitation = filtered_features.groupby(['year', 'month'])['tp'].sum().reset_index()
 
-    # Ay bazında istatistik hesaplama
+    # Her ay için toplam yağış ortalamasını hesaplama
+    monthly_precipitation_avg = monthly_precipitation.groupby('month')['tp'].mean()
+
+    # Sıcaklık istatistiklerini aylık bazda hesaplama
     monthly_stats = filtered_temp.groupby('month')['t2m'].agg(['mean', 'min', 'max']).rename(
         columns={'mean': 'Ortalama Sıcaklık (°C)', 'min': 'Minimum Sıcaklık (°C)', 'max': 'Maksimum Sıcaklık (°C)'}
     )
 
-    # Yağış miktarı ekleme
-    monthly_precipitation = filtered_features.groupby('month')['tp'].mean()
-    monthly_stats['Yağış (mm)'] = monthly_precipitation.values
+    # Aylık toplam yağışları tabloya ekleme
+    monthly_stats['Yağış (mm)'] = monthly_precipitation_avg.values
 
     # Ay isimlerini ekleme
     month_names = {
@@ -131,7 +128,7 @@ def create_monthly_statistics(df_temperature, df_features):
 
     return monthly_stats
 
-# Tabloyu oluşturma ve yazdırma
+# Tabloyu görselleştirme
 def plot_monthly_statistics_table(monthly_statistics):
     fig, ax = plt.subplots(figsize=(12, 8))
     ax.axis('tight')
@@ -147,5 +144,6 @@ def plot_monthly_statistics_table(monthly_statistics):
     plt.title("1991-2021 Aylık İstatistikler", fontsize=14, pad=20)
     plt.show()
 
+# Güncellenmiş tabloyu oluşturma ve görselleştirme
 monthly_statistics = create_monthly_statistics(df_temperature, df_features)
 plot_monthly_statistics_table(monthly_statistics)
