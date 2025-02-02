@@ -1,24 +1,34 @@
-import pandas as pd
 import numpy as np
-from statsmodels.tsa.arima.model import ARIMA
+import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 
-# Saçma sapan sıcaklık verileri oluştur
-dates = pd.date_range('1990-01-01', '2020-12-31', freq='M')
-data = pd.DataFrame(np.random.randn(len(dates)) * 10 + 15, index=dates, columns=['Temperature'])  # Ortalama 15°C, sapma 10°C
+sns.set_style('whitegrid')
+plt.style.use("fivethirtyeight")
 
-# ARIMA ile biraz eğlenelim
-model = ARIMA(data['Temperature'], order=(1, 1, 1))  # Evet, bu parametreler uydurma olabilir, sen de uydurabilirsin
-results = model.fit()
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import Dense, LSTM, Input
+from sklearn.preprocessing import MinMaxScaler
+from datetime import timedelta
+import os
+import json
 
-# Geleceği tahmin edelim, bakalım ne yapacak bu model
-future_dates = pd.date_range(start=data.index[-1], periods=120, freq='M')
-forecast = results.forecast(steps=120)
+# 📌 Eğer history2 tanımlı değilse, eski eğitim geçmişini kullan
+if 'history2' in locals():
+    plt.figure(figsize=(12, 8))
+    plt.plot(history2.history["loss"])
+    plt.plot(history2.history["mean_absolute_error"])
+    plt.legend(['Mean Squared Error', 'Mean Absolute Error'])
+    plt.title("Losses")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.show()
+else:
+    # 📌 Eğer history2 yoksa, daha önce kaydedilmiş eğitimi yükleyelim
+    with open("training_history2.json", "r") as f:
+        history_data = json.load(f)
 
-# Şimdi bunları grafik olarak görselleştir
-plt.figure(figsize=(12, 6))
-plt.plot(data.index, data['Temperature'], label='Geçmiş Sıcaklıklar (Gerçekten bunlar mı?)')
-plt.plot(future_dates, forecast, label='Gelecekteki Sıcaklıklar (Umarım haklı çıkarız)')
-plt.legend()
-plt.title('Gelecekteki Sıcaklıklar - Belki de Tamamen Yanlış')
-plt.show()
+    plt.figure(figsize=(12, 8))
+    plt.plot(history_data["loss"])
+    plt.plot(history_data["mean_absolute_error"])
+    plt.legend(['Mean Squared Error', 'Mean Absolute'])
