@@ -1,18 +1,20 @@
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
+'''
+import seaborn as sns
 from datetime import timedelta
 import os
 import json
-
+'''
+'''
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, LSTM, Input
 from sklearn.preprocessing import MinMaxScaler
 
 sns.set_style('whitegrid')
 plt.style.use("fivethirtyeight")
-
+'''
 # =============================================================================
 # Veri Yükleme ve Ön İşleme
 # =============================================================================
@@ -33,7 +35,7 @@ plt.figure(figsize=(15, 6))
 df['tp'].plot()
 plt.title("Mean Pressure")
 plt.show()
-
+'''
 # =============================================================================
 # Tek Değişkenli Model (t2m)
 # =============================================================================
@@ -290,3 +292,4 @@ plt.ylabel("Sıcaklık (t2m)")
 plt.title("Sonraki 1 yıl Tahmini - Çoklu Değişken Model")
 plt.legend()
 plt.show()
+'''
