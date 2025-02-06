@@ -290,4 +290,8 @@ plt.xlabel("Tarih")
 plt.ylabel("Sıcaklık (t2m)")
 plt.title("Sonraki 1 yıl Tahmini - Çoklu Değişken Model")
 plt.legend()
+<<<<<<< Updated upstream
 plt.show()
+=======
+plt.show()
+>>>>>>> Stashed changes
