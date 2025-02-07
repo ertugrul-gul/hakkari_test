@@ -24,6 +24,12 @@ df = pd.read_csv(data_dir)
 df['valid_time'] = pd.to_datetime(df['valid_time'])
 df.set_index('valid_time', inplace=True)
 
+# Günlük verileri haftalık ortalamalara çevirme
+df = df.resample('W').mean()
+
+# Boş veya eksik değerleri kontrol etme ve doldurma
+df = df.fillna(method='ffill')
+
 # İlk grafikleri çizme
 plt.figure(figsize=(15, 6))
 df['t2m'].plot()
@@ -263,7 +269,7 @@ def insert_end(Xin, new_input):
     Xin[:, -1, :] = new_input
     return Xin
 
-future = 3650
+future = 30
 forecast = []
 Xin = x_test_multi[-1:, :, :]
 time_forecast = [df.index[-1] + timedelta(days=i) for i in range(1, future+1)]
@@ -290,12 +296,8 @@ plt.xlabel("Tarih")
 plt.ylabel("Sıcaklık (t2m)")
 plt.title("Sonraki 1 yıl Tahmini - Çoklu Değişken Model")
 plt.legend()
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+
 plt.show()
-=======
+
 plt.show()
->>>>>>> Stashed changes
-=======
 plt.show()
->>>>>>> Stashed changes
