@@ -300,4 +300,11 @@ plt.legend()
 plt.show()
 
 plt.show()
+<<<<<<< HEAD
 plt.show()
+=======
+
+
+plt.show()
+
+>>>>>>> 315e0b45b08e6229addb71b922461c40ea095d05
