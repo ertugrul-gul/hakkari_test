@@ -298,11 +298,3 @@ plt.title("Sonraki 1 yıl Tahmini - Çoklu Değişken Model")
 plt.legend()
 
 plt.show()
-
-plt.show()
-
-plt.show()
-
-
-
-plt.show()
