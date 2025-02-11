@@ -24,9 +24,6 @@ df = pd.read_csv("/home/ertugrulgul/PycharmProjects/hakkari_test/data_H/Modellem
 df['t2m'] = df['t2m'] - 273.15
 df['tp'] = df['tp']*1000
 df['sp'] = df['sp']/100
-df["lat"] = df["latitude"]
-df["lon"] = df["longitude"]
-
 # %%
 df.head()
 
@@ -49,7 +46,7 @@ df.set_index('valid_time', inplace=True)  # İndeks olarak ayarla
 df = df.sort_index()  # Zaman sırasına göre sıralayın (bazı algoritmalar için önemli)
 
 # Enlem ve boylam bazında gruplama yaparak her bir bölge için veri oluştur
-grouped = df.groupby(["latitude", "longitude"])
+grouped = df.groupby(["lat", "lon"])
 
 # %%
 print(df.columns)
