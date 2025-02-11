@@ -18,7 +18,7 @@ from tensorflow.keras.layers import LSTM, GRU, SimpleRNN, TimeDistributed, Bidir
 from tensorflow.keras.models import model_from_json
 
 # %%
-df = pd.read_csv("/home/ertugrulgul/Belgeler/GitHub/hakkari_test/data_H/Modellemeler/haftalıkveriler/hakkari.csv")
+df = pd.read_csv("/home/ertugrulgul/PycharmProjects/hakkari_test/data_H/Modellemeler/haftalıkveriler/hakkari.csv")
 
 # %%
 df['t2m'] = df['t2m'] - 273.15
