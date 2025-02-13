@@ -90,43 +90,44 @@ df_year = df.resample ('YE').mean()
 print(df.index.min(), df.index.max())  # Veri setinin başlangıç ve bitiş tarihleri
 print(df.index.to_series().diff().value_counts())  # Zaman aralıklarının düzenliliğini kontrol et
 
-# %%
-#IQR Yöntemiyle Aykırı Değerleri CSV'ye Kaydetme
-
-# Sayısal sütunları seç
-numeric_cols = df.select_dtypes(include=["number"]).columns  
-
-# Aykırı değerleri saklamak için boş bir DataFrame oluştur
-outliers_df = pd.DataFrame()
+# IQR Yöntemi ile Aykırı Değerleri Belirleme ve Kaldırma
+numeric_cols = df.select_dtypes(include=["number"]).columns
+initial_rows = df.shape[0]
 
 for col in numeric_cols:
-    Q1 = df[col].quantile(0.25)  
-    Q3 = df[col].quantile(0.75)  
-    IQR = Q3 - Q1  
-
+    Q1 = df[col].quantile(0.25)
+    Q3 = df[col].quantile(0.75)
+    IQR = Q3 - Q1
     lower_bound = Q1 - 1.5 * IQR
     upper_bound = Q3 + 1.5 * IQR
+    df = df[(df[col] >= lower_bound) & (df[col] <= upper_bound)]  # Aykırı değerleri kaldır
 
-    # Aykırı değerleri belirle
-    outliers = df[(df[col] < lower_bound) | (df[col] > upper_bound)].copy()  
+deleted_rows_iqr = initial_rows - df.shape[0]
+print(f"✅ IQR yöntemi ile {deleted_rows_iqr} aykırı değer kaldırıldı.")
 
-    if not outliers.empty:
-        print(f"\n📌 {col} sütunundaki aykırı değerler:")
-        print(f"🔹 Alt sınır: {lower_bound:.2f}, Üst sınır: {upper_bound:.2f}")
-        print(outliers[[col]])  # Sadece ilgili sütunu göster
+# Z-Score Yöntemi ile Aykırı Değerleri Belirleme ve Kaldırma
+threshold = 3  # Aykırılık sınırı
+std_threshold = 1e-8  # Standart sapma eşiği (çok küçük değerleri elemek için)
 
-        # ✅ Hangi sütundan geldiğini belirtmek için yeni bir sütun ekleyelim
-        outliers.loc[:, "Aykırı_Sütun"] = col  
+outlier_indices = set()
 
-        # ✅ Aykırı değerleri birleştir
-        outliers_df = pd.concat([outliers_df, outliers])  
+for col in numeric_cols:
+    std_dev = df[col].std()
 
-# ✅ CSV olarak kaydet (Eğer aykırı değer bulunduysa)
-if not outliers_df.empty:
-    outliers_df.to_csv("aykiri_veriler_IQR.csv", index=True, encoding="utf-8")
-    print("✅ Aykırı değerler 'aykiri_veriler.csv' dosyasına kaydedildi!")
+    # Standart sapma çok küçükse, z-score hesaplamayı atla
+    if std_dev > std_threshold:
+        z_scores = stats.zscore(df[col])
+        outliers = df.index[abs(z_scores) > threshold]  # Aykırı satırları belirle
+        outlier_indices.update(outliers)
+    else:
+        print(f"⚠️ {col} sütununun standart sapması çok düşük, z-score hesaplanmadı.")
+
+# Aykırı değerleri topluca kaldır
+if outlier_indices:
+    print(f"\n📌 Z-Score yöntemi ile {len(outlier_indices)} aykırı değer belirlendi ve kaldırılıyor...")
+    df = df.drop(index=outlier_indices)
 else:
-    print("⚠️ Aykırı değer bulunamadı.")
+    print("✅ Z-Score yöntemi ile aykırı değer bulunamadı.")
 
 # %%
 #Z-Score Yöntemiyle Aykırı Değerleri CSV'ye Kaydetme
