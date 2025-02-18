@@ -20,6 +20,10 @@ from tensorflow.keras.models import model_from_json
 
 
 df = pd.read_csv("hakkari.csv")
+df['t2m'] = df['t2m'] - 273.15
+df['tp'] = df['tp']*1000
+df['sp'] = df['sp']/100
+
 # Kolon indeksleri 0'dan başlar. 3. ve 4. kolonlar sırasıyla index 2 ve 3'e denk gelir.
 df = df.drop(df.columns[[3, 4]], axis=1)
 # Sonuçları göster
@@ -41,6 +45,5 @@ outliers_mask = (np.abs(z_scores) > threshold).any(axis=1)  # En az bir sütunda
 df_cleaned = df[~outliers_mask]  # Aykırı satırları çıkar
 
 # Temizlenmiş veriyi yeni CSV olarak kaydet, datetime formatı bozulmasın!
-df_cleaned.to_csv("hakkari_end.csv", index=False, date_format="%Y-%m-%d %H:%M:%S")
+df_cleaned.to_csv("hakkari_0.csv", index=False, date_format="%Y-%m-%d %H:%M:%S")
 df_cleaned.info()
-
