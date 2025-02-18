@@ -9,6 +9,8 @@ from scipy import stats
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
 from sklearn.preprocessing import MinMaxScaler
+
+"""
 import tensorflow as tf
 from datetime import datetime
 
@@ -16,7 +18,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import LSTM, GRU, SimpleRNN, TimeDistributed, Bidirectional
 from tensorflow.keras.models import model_from_json
-
+"""
 # %%
 df = pd.read_csv("/home/ertugrulgul/PycharmProjects/hakkari_test/data_H/Modellemeler/haftalıkveriler/hakkari.csv")
 
