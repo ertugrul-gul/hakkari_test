@@ -6,13 +6,8 @@ Created on Fri Feb  7 23:34:59 2025
 @author: ertugrulgul
 """
 
-import os
 import numpy as np
-import random
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
-from datetime import datetime
 from scipy.stats import zscore
 
 
@@ -48,3 +43,4 @@ df_cleaned = df[~outliers_mask]  # Aykırı satırları çıkar
 # Temizlenmiş veriyi yeni CSV olarak kaydet, datetime formatı bozulmasın!
 df_cleaned.to_csv("hakkari_end.csv", index=False, date_format="%Y-%m-%d %H:%M:%S")
 df_cleaned.info()
+
