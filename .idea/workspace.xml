@@ -5,12 +5,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6397d738-301d-4e0d-b30b-9d3dcb846221" name="Changes" comment="few">
+      <change afterPath="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler/LSTM.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler/Probhet.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler/Random Forest.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler/SARIMA.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler/VAR.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler/XGBoost.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -35,6 +49,9 @@
   &quot;associatedIndex&quot;: 2
 }</component>
   <component name="ProjectId" id="2suoVIlEOgMD4ISDYghCc0ECBX9" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -42,21 +59,29 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Python.1.executor": "Run",
+    "Python.LSTM.executor": "Run",
+    "Python.Probhet.executor": "Run",
+    "Python.Random Forest.executor": "Run",
+    "Python.SARIMA.executor": "Run",
     "Python.Untitled-12.executor": "Run",
+    "Python.VAR.executor": "Run",
+    "Python.XGBoost.executor": "Run",
     "Python.data_hazirlama.executor": "Debug",
     "Python.deneme.executor": "Run",
     "Python.first.executor": "Run",
     "Python.hakkari.executor": "Debug",
+    "Python.hakkari_model.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/Users/user/PycharmProjects/tekin/talk-to-web",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "settings.editor.selected.configurable": "RainbowCSV.Settings",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -91,7 +116,9 @@
       <workItem from="1739357019698" duration="5910000" />
       <workItem from="1739897383903" duration="712000" />
       <workItem from="1739981400803" duration="210000" />
-      <workItem from="1739981654116" duration="9642000" />
+      <workItem from="1739981654116" duration="9859000" />
+      <workItem from="1739989380896" duration="5907000" />
+      <workItem from="1739997748689" duration="375000" />
     </task>
     <task id="LOCAL-00001" summary="few">
       <option name="closed" value="true" />
@@ -101,7 +128,15 @@
       <option name="project" value="LOCAL" />
       <updated>1739317383374</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="few">
+      <option name="closed" value="true" />
+      <created>1739998826137</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1739998826137</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -112,9 +147,16 @@
     <option name="LAST_COMMIT_MESSAGE" value="few" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/hakkari_test$Random_Forest.coverage" NAME="Random Forest Coverage Results" MODIFIED="1739995370143" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler" />
+    <SUITE FILE_PATH="coverage/hakkari_test$VAR.coverage" NAME="VAR Coverage Results" MODIFIED="1739997649133" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler" />
     <SUITE FILE_PATH="coverage/hakkari_test$first.coverage" NAME="first Coverage Results" MODIFIED="1739315432685" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/hakkari_test$LSTM.coverage" NAME="LSTM Coverage Results" MODIFIED="1739995486799" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler" />
     <SUITE FILE_PATH="coverage/hakkari_test$1.coverage" NAME="1 Coverage Results" MODIFIED="1739354548627" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/hakkari_test$XGBoost.coverage" NAME="XGBoost Coverage Results" MODIFIED="1739995117892" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler" />
+    <SUITE FILE_PATH="coverage/hakkari_test$SARIMA.coverage" NAME="SARIMA Coverage Results" MODIFIED="1739996985640" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler" />
+    <SUITE FILE_PATH="coverage/hakkari_test$Probhet.coverage" NAME="Probhet Coverage Results" MODIFIED="1739998091377" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler" />
     <SUITE FILE_PATH="coverage/hakkari_test$Untitled_12.coverage" NAME="Untitled-12 Coverage Results" MODIFIED="1739466094190" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler" />
-    <SUITE FILE_PATH="coverage/hakkari_test$deneme.coverage" NAME="deneme Coverage Results" MODIFIED="1739983282007" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/hakkari_test$hakkari_model.coverage" NAME="hakkari_model Coverage Results" MODIFIED="1739990628439" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data_H/Modellemeler/haftalıkveriler" />
+    <SUITE FILE_PATH="coverage/hakkari_test$deneme.coverage" NAME="deneme Coverage Results" MODIFIED="1739989948612" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
