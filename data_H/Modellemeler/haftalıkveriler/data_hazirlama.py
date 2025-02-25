@@ -45,5 +45,5 @@ outliers_mask = (np.abs(z_scores) > threshold).any(axis=1)  # En az bir sütunda
 df_cleaned = df[~outliers_mask]  # Aykırı satırları çıkar
 
 # Temizlenmiş veriyi yeni CSV olarak kaydet, datetime formatı bozulmasın!
-df_cleaned.to_csv("hakkari_0.csv", index=False, date_format="%Y-%m-%d %H:%M:%S")
+df_cleaned.to_csv("hakkari_0.csv", index=False, date_format="%Y-%m-%d")
 df_cleaned.info()
