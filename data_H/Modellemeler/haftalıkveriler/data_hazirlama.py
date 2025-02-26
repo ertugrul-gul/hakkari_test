@@ -4,6 +4,9 @@
 Created on Fri Feb  7 23:34:59 2025
 
 @author: ertugrulgul
+
+DEneme
+1,2,3,4,5,6
 """
 
 import numpy as np
