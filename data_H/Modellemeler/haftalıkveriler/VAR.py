@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from statsmodels.tsa.api import VAR
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+import matplotlib.pyplot as plt
 
 # 🔹 Model değerlendirme fonksiyonu
 def evaluate_model(y_true, y_pred, model_name, coord):
@@ -31,8 +32,9 @@ var_predictions = {}
 for coord in coordinate_list:
     print(f"📌 VAR modeli çalıştırılıyor: {coord} koordinatı için...")
 
-    # 🔹 Belirli koordinattaki veriyi al
-    df_coord = df[(df["lat"] == coord[0]) & (df["lon"] == coord[1])]
+    # 🔹 Belirli koordinattaki veriyi al.  Artık df'den filtreleme yapmıyoruz, zaten gruplanmış veriyle uğraşıyoruz.
+    lat, lon = coord  # Koordinatları ayır
+    df_coord = df[(df["lat"] == lat) & (df["lon"] == lon)].copy()  # Copy'i ekledim
 
     # 🔹 Eğer yeterli veri yoksa, geç
     if len(df_coord) < 30:
@@ -66,10 +68,24 @@ for coord in coordinate_list:
     y_pred_var = var_forecast[:, :2]
 
     # 🔹 Modeli değerlendir
-    evaluate_model(test[["t2m", "tp"]], y_pred_var, "VAR", coord)
+    evaluate_model(test[["t2m", "tp"]].values, y_pred_var, "VAR", coord) # test verisini numpy array'ine dönüştürdüm
 
     # 🔹 Sonuçları DataFrame olarak sakla
     var_predictions[coord] = pd.DataFrame(y_pred_var, index=test.index, columns=["t2m_pred", "tp_pred"])
+
+    # 🔹 Grafik çizimi
+    plt.figure(figsize=(12, 6))
+    plt.plot(train.index, train["t2m"], label="Eğitim Verisi (t2m)")
+    plt.plot(test.index, test["t2m"], label="Gerçek Değerler (t2m)")
+    plt.plot(test.index, y_pred_var[:, 0], label="Tahminler (t2m)", linestyle="--")
+    plt.title(f"{coord} - T2M Tahminleri")
+    plt.xlabel("Tarih")
+    plt.ylabel("Sıcaklık (t2m)")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
 
     print(f"✅ {coord} için model tamamlandı.")
 

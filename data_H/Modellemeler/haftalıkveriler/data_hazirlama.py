@@ -23,6 +23,8 @@ df = pd.read_csv("hakkari.csv")
 df['t2m'] = df['t2m'] - 273.15
 df['tp'] = df['tp']*1000
 df['sp'] = df['sp']/100
+df["ws"] = np.sqrt(df["u10"]**2 + df["v10"]**2)
+
 
 # Kolon indeksleri 0'dan başlar. 3. ve 4. kolonlar sırasıyla index 2 ve 3'e denk gelir.
 df = df.drop(df.columns[[3, 4]], axis=1)
@@ -34,7 +36,7 @@ df.info()
 df["valid_time"] = pd.to_datetime(df["valid_time"], errors="coerce")
 
 # Sayısal kolonları belirle
-numeric_cols = ["lat", "lon", "sp", "u10", "v10", "t2m", "tp"]
+numeric_cols = ["lat", "lon", "sp", "u10", "v10", "t2m", "tp", "ws"]
 
 # Z-score hesapla ve aykırı değerleri belirle
 z_scores = df[numeric_cols].apply(zscore)  # Her sütun için Z-score hesaplar
@@ -45,5 +47,5 @@ outliers_mask = (np.abs(z_scores) > threshold).any(axis=1)  # En az bir sütunda
 df_cleaned = df[~outliers_mask]  # Aykırı satırları çıkar
 
 # Temizlenmiş veriyi yeni CSV olarak kaydet, datetime formatı bozulmasın!
-df_cleaned.to_csv("hakkari_0.csv", index=False, date_format="%Y-%m-%d %H:%M:%S")
+df_cleaned.to_csv("hakkari_0.csv", index=False, date_format="%Y-%m-%d")
 df_cleaned.info()
