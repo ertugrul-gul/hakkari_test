@@ -13,7 +13,7 @@ from scipy.stats import zscore
 
 
 
-df = pd.read_csv("base_data/hakkari_0.csv")
+df = pd.read_csv("../base_data/hakkari_0.csv")
 df['t2m'] = df['t2m'] - 273.15
 df['tp'] = df['tp']*1000
 df['sp'] = df['sp']/100

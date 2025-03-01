@@ -12,7 +12,7 @@ def evaluate_model(y_true, y_pred, model_name, coord):
     print(f"📌 RMSE: {rmse}")
 
 # 🔹 Veriyi yükle
-df = pd.read_csv("base_data/hakkari_0.csv")
+df = pd.read_csv("../base_data/hakkari_0.csv")
 
 # 🔹 Tarih sütununu datetime formatına çevir ve indeks olarak ata
 df["valid_time"] = pd.to_datetime(df["valid_time"], errors="coerce")
