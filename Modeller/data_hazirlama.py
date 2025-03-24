@@ -6,22 +6,23 @@ Created on Fri Feb  7 23:34:59 2025
 @author: ertugrulgul
 
 """
-
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import plot
 from scipy.stats import zscore
 
 
-
 df = pd.read_csv("../base_data/hakkari_0.csv")
+"""
 df['t2m'] = df['t2m'] - 273.15
 df['tp'] = df['tp']*1000
 df['sp'] = df['sp']/100
 df["ws"] = np.sqrt(df["u10"]**2 + df["v10"]**2)
 
 
-# Kolon indeksleri 0'dan başlar. 3. ve 4. kolonlar sırasıyla index 2 ve 3'e denk gelir.
-df = df.drop(df.columns[[3, 4]], axis=1)
+"""
+
 # Sonuçları göster
 print(df.head())
 df.info()
@@ -43,3 +44,9 @@ df_cleaned = df[~outliers_mask]  # Aykırı satırları çıkar
 # Temizlenmiş veriyi yeni CSV olarak kaydet, datetime formatı bozulmasın!
 df_cleaned.to_csv("hakkari_0.csv", index=False, date_format="%Y-%m-%d")
 df_cleaned.info()
+
+df_cleaned["valid_time"] = pd.to_datetime(df_cleaned["valid_time"])
+plt.plot(df_cleaned.index, df_cleaned["t2m"])
+plt.show()
+
+<
