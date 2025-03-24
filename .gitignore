@@ -170,4 +170,5 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 .idearepoada
-.idea.DS_Store
+.idea
+.DS_Store
