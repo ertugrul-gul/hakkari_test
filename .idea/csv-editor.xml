@@ -3,21 +3,28 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
-        <entry key="\base_data\hakkari_0.csv">
+        <entry key="\data_H\Modellemeler\haftalıkveriler\hakkari.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>
-        <entry key="\daily_avg.csv">
+        <entry key="\data_H\Modellemeler\haftalıkveriler\hakkari_0.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>
-        <entry key="\daily_avg_fixed.csv">
+        <entry key="\data_H\Modellemeler\haftalıkveriler\prophet_predictions.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\data_H\Modellemeler\haftalıkveriler\var_predictions.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
