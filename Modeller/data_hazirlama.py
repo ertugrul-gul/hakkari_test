@@ -6,10 +6,8 @@ Created on Fri Feb  7 23:34:59 2025
 @author: ertugrulgul
 
 """
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import plot
 from scipy.stats import zscore
 
 
@@ -42,11 +40,5 @@ outliers_mask = (np.abs(z_scores) > threshold).any(axis=1)  # En az bir sütunda
 df_cleaned = df[~outliers_mask]  # Aykırı satırları çıkar
 
 # Temizlenmiş veriyi yeni CSV olarak kaydet, datetime formatı bozulmasın!
-df_cleaned.to_csv("hakkari_0.csv", index=False, date_format="%Y-%m-%d")
+df_cleaned.to_csv("hakkari_0_1.csv", index=False, date_format="%Y-%m-%d")
 df_cleaned.info()
-
-df_cleaned["valid_time"] = pd.to_datetime(df_cleaned["valid_time"])
-plt.plot(df_cleaned.index, df_cleaned["t2m"])
-plt.show()
-
-<
