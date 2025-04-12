@@ -12,14 +12,14 @@ from scipy.stats import zscore
 import xarray as xr
 
 # NC dosyalarını açma
-df1 = xr.open_dataset("data_0_m.nc")
-df2 = xr.open_dataset("data_1_m.nc")
+df1 = xr.open_dataset("data_0.nc")
+df2 = xr.open_dataset("data_1.nc")
 
-"""
+
 # valid_time saat bilgilerini kaldır, sadece tarih kalsın
 df1['valid_time'] = df1['valid_time'].dt.floor('D')
 df2['valid_time'] = df2['valid_time'].dt.floor('D')
-"""
+
 
 # Verileri değişkenler açısından birleştirme (aynı koordinat ve zaman bilgisi üzerinden)
 df_combined = xr.merge([df1, df2])
@@ -31,7 +31,7 @@ df_combined.to_netcdf("combined_data.nc")
 df_combined_df = df_combined.to_dataframe().reset_index()
 
 # Gereksiz sütunları kaldır
-df_combined_df.drop(df_combined_df.columns[3:4], axis=1, inplace=True)
+df_combined_df.drop(df_combined_df.columns[[3,4]], axis=1, inplace=True)
 
 """
 # Dönüşümlerin gerçekleştirilmesi
