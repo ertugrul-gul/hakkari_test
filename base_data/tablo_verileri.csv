@@ -1,0 +1,25 @@
+Uzun Ad,Kısa Ad,Türkçe Açıklama
+10m u-component of wind,u10,10 m yükseklikte rüzgarın doğu-batı bileşeni
+10m v-component of wind,v10,10 m yükseklikte rüzgarın kuzey-güney bileşeni
+2m dewpoint temperature,d2m,2 m'de çiy noktası sıcaklığı
+2m temperature,t2m,2 m'de hava sıcaklığı
+Surface pressure,sp,Yüzey basıncı
+Total precipitation,tp,Toplam yağış miktarı
+10m wind speed,si10,10 m'de rüzgar hızı
+Mean convective precipitation rate,avg_cpr,Konvektif yağışın ortalama hızı
+Mean evaporation rate,e,Ortalama buharlaşma oranı
+Mean large-scale precipitation rate,avg_lsprate,Büyük ölçekli yağışın ortalama hızı
+Mean snowfall rate,avg_tsrwe,Ortalama kar yağışı hızı
+Mean total precipitation rate,avg_tprate,Ortalama toplam yağış hızı
+Mean vertically integrated moisture divergence,avg_vimdf,Dikey entegre nem sapmasının ortalaması
+Surface latent heat flux,slhf,Yüzeyden gizli ısı akısı
+Surface net solar radiation,ssr,Yüzey net güneş radyasyonu
+Surface net thermal radiation,str,Yüzey net termal radyasyon
+Surface sensible heat flux,sshf,Yüzeyden duyulur ısı akısı
+Evaporation,avg_ie,Buharlaşma
+Convective precipitation,cp,Konvektif yağış
+Total column water,tcw,Toplam su sütunu
+Total column water vapour,tcwv,Toplam su buharı sütunu
+valid_time,valid_time,Geçerlilik zamanı
+latitude,lat,Enlem
+longitude,lon,Boylam
