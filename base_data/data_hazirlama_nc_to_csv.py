@@ -15,21 +15,39 @@ import xarray as xr
 df1 = xr.open_dataset("data_0_m.nc")
 df2 = xr.open_dataset("data_1_m.nc")
 
+"""
+# valid_time saat bilgilerini kaldır, sadece tarih kalsın
+df1['valid_time'] = df1['valid_time'].dt.floor('D')
+df2['valid_time'] = df2['valid_time'].dt.floor('D')
+"""
+
 # Verileri değişkenler açısından birleştirme (aynı koordinat ve zaman bilgisi üzerinden)
-ds_combined = xr.merge([df1, df2])
+df_combined = xr.merge([df1, df2])
 
 # Birleştirilmiş veriyi yeni bir dosyaya kaydetme
-ds_combined.to_netcdf("combined_data.nc")
+df_combined.to_netcdf("combined_data.nc")
 
 # Veriyi DataFrame olarak CSV'ye dönüştürme
-ds_combined_df = ds_combined.to_dataframe().reset_index()
-ds_combined_df.to_csv("combined_data.csv", index=False)
+df_combined_df = df_combined.to_dataframe().reset_index()
+
+# Gereksiz sütunları kaldır
+df_combined_df.drop(df_combined_df.columns[3:4], axis=1, inplace=True)
 
 """
-df['t2m'] = df['t2m'] - 273.15
-df['tp'] = df['tp']*1000
-df['sp'] = df['sp']/100
-df["ws"] = np.sqrt(df["u10"]**2 + df["v10"]**2)
+# Dönüşümlerin gerçekleştirilmesi
+df_combined_df['t2m'] = df_combined_df['t2m'] - 273.15
+df_combined_df['tp'] = df_combined_df['tp']*1000
+df_combined_df['sp'] = df_combined_df['sp']/100
+df_combined_df["ws"] = np.sqrt(df_combined_df["u10"]**2 + df_combined_df["v10"]**2)
+"""
+
+# CSV olarak kaydet
+df_combined_df.to_csv("combined_data.csv", index=False)
+
+
+
+"""
+
 
 
 

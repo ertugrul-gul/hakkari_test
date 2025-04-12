@@ -8,4 +8,3 @@ print("GPU Available:", gpu_available)
 #
 
 #tf.config.list_physical_devices('GPU')
-
