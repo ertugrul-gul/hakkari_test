@@ -107,6 +107,57 @@ df_cleaned["month_cos"] = np.cos(2 * np.pi * df_cleaned["month"] / 12)
 df_cleaned.to_csv("combined_data_cleaned_final.csv", index=False)
 print("Mevsimsellik eklendi ve tamamen temizlenmiş veri combined_data_cleaned_final.csv dosyasına kaydedildi.")
 
+# ... önceki kodlarının tamamı burada aynen korunuyor ...
+
+# Temizlenmiş veri CSV'ye kaydedildikten sonra devam:
+df_cleaned.to_csv("combined_data_cleaned_final.csv", index=False)
+print("Mevsimsellik eklendi ve tamamen temizlenmiş veri combined_data_cleaned_final.csv dosyasına kaydedildi.")
+
 # Sonuçları göster
 print(df_combined_df.head())
 df_combined_df.info()
+
+# -------------------------------------------
+# STL Ayrıştırma: Her koordinat için t2m ve tp
+# -------------------------------------------
+from statsmodels.tsa.seasonal import STL
+import matplotlib.pyplot as plt
+import os
+
+# Grafik çıktıları için klasör oluştur
+output_dir = "decomposition_plots"
+os.makedirs(output_dir, exist_ok=True)
+
+# Benzersiz koordinat çiftlerini al
+coords = df_cleaned[["latitude", "longitude"]].drop_duplicates().values
+
+# Her koordinat çifti için ayrıştırma yap
+for lat, lon in coords:
+    sub_df = df_cleaned[(df_cleaned["latitude"] == lat) & (df_cleaned["longitude"] == lon)].sort_values("valid_time")
+
+    ts_t2m = sub_df.set_index("valid_time")["t2m"]
+    ts_tp = sub_df.set_index("valid_time")["tp"]
+
+    try:
+        # STL ile ayrıştır
+        stl_t2m = STL(ts_t2m, period=12, robust=True).fit()
+        stl_tp = STL(ts_tp, period=12, robust=True).fit()
+
+        # t2m için grafik
+        fig1 = stl_t2m.plot()
+        fig1.suptitle(f"STL Decomposition - Temperature (t2m)\n({lat}, {lon})")
+        fig1.tight_layout()
+        fig1.savefig(f"{output_dir}/decompose_{lat}_{lon}_t2m.png", dpi=300)
+        plt.close(fig1)
+
+        # tp için grafik
+        fig2 = stl_tp.plot()
+        fig2.suptitle(f"STL Decomposition - Precipitation (tp)\n({lat}, {lon})")
+        fig2.tight_layout()
+        fig2.savefig(f"{output_dir}/decompose_{lat}_{lon}_tp.png", dpi=300)
+        plt.close(fig2)
+
+        print(f"✓ STL ayrıştırma tamamlandı: ({lat}, {lon})")
+
+    except Exception as e:
+        print(f"⚠ STL hatası: ({lat}, {lon}) -> {e}")
