@@ -8,7 +8,6 @@ Created on Fri Feb  7 23:34:59 2025
 """
 import numpy as np
 import pandas as pd
-from scipy.stats import zscore
 import xarray as xr
 
 # NC dosyalarını açma
@@ -161,3 +160,13 @@ for lat, lon in coords:
 
     except Exception as e:
         print(f"⚠ STL hatası: ({lat}, {lon}) -> {e}")
+
+# -------------------------------------------
+# Haritalandırma
+# -------------------------------------------
+import geopandas as gpd
+import pandas as pd
+import matplotlib.pyplot as plt
+
+plt.show()
+
