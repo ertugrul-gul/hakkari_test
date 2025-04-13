@@ -9,7 +9,16 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # Veriyi oku
-df = pd.read_csv("../base_data/combined_data_cleaned_final.csv")
+df = pd.read_csv("../../base_data/combined_data_cleaned_final.csv")
+
+# 📌 LAG özelliklerini ekle
+df = df.sort_values(["latitude", "longitude", "valid_time"])
+df["tp_lag_1"] = df.groupby(["latitude", "longitude"])["tp"].shift(1)
+df["tp_lag_2"] = df.groupby(["latitude", "longitude"])["tp"].shift(2)
+df["tp_lag_3"] = df.groupby(["latitude", "longitude"])["tp"].shift(3)
+
+# Eksik lag satırları silinir
+df.dropna(inplace=True)
 
 # Sonuçları toplamak için liste
 results = []
@@ -98,5 +107,5 @@ for (lat, lon), group in groups:
 
 # Sonuçları kaydet
 results_df = pd.DataFrame(results)
-results_df.to_csv("LSTM_performance_by_coordinate(sequence_length = 12 epochs = 20).csv", index=False)
+results_df.to_csv("LSTM_performance_by_coordinate(sequence_length = 12 epochs = 20)_0.csv", index=False)
 print("Tüm modeller uyarısız şekilde eğitildi ve sonuçlar kaydedildi.")
