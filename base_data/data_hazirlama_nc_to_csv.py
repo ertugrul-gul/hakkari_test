@@ -33,44 +33,80 @@ df_combined_df = df_combined.to_dataframe().reset_index()
 # Gereksiz sütunları kaldır
 df_combined_df.drop(df_combined_df.columns[[3,4]], axis=1, inplace=True)
 
-"""
 # Dönüşümlerin gerçekleştirilmesi
-df_combined_df['t2m'] = df_combined_df['t2m'] - 273.15
-df_combined_df['tp'] = df_combined_df['tp']*1000
-df_combined_df['sp'] = df_combined_df['sp']/100
-df_combined_df["ws"] = np.sqrt(df_combined_df["u10"]**2 + df_combined_df["v10"]**2)
-"""
+df_combined_df['t2m'] = df_combined_df['t2m'] - 273.15 # kelvin to Celcius
+df_combined_df['tp'] = df_combined_df['tp']*1000 # m to mm
+df_combined_df['sp'] = df_combined_df['sp']/100 # Pascal to hPa
+df_combined_df['d2m'] = df_combined_df['d2m'] - 273.15 # çiğ sıcaklık kelvin to Celcius
 
-# CSV olarak kaydet
-df_combined_df.to_csv("combined_data.csv", index=False)
+#Bağıl nem (RH) hesapla (t2m ve d2m'den)
+d2m_C = df_combined_df["d2m"]
+t_C = df_combined_df["t2m"]
+e_t = 6.112 * np.exp((17.67 * t_C) / (t_C + 243.5))
+e_d = 6.112 * np.exp((17.67 * d2m_C) / (d2m_C + 243.5))
+RH = 100 * (e_d / e_t)
+df_combined_df["RH"] = RH.clip(upper=100)
 
+#eksik verileri kontrol etme
+missing_data = df_combined_df.isnull().sum()
+rows_before = len(df_combined_df)
+df_combined_df.dropna(inplace=True)
+rows_after = len(df_combined_df)
+print(f"{rows_before - rows_after} satır silindi Toplam {missing_data} eksik hücre vardı.")
 
+# IQR yöntemiyle aykırı değer analizi
+def clean_by_iqr(df):
+    numeric_cols = df.select_dtypes(include=['number']).columns
+    iteration = 0
+    while True:
+        iteration += 1
+        outlier_mask = pd.DataFrame(False, index=df.index, columns=numeric_cols)
+        for col in numeric_cols:
+            Q1 = df[col].quantile(0.25)
+            Q3 = df[col].quantile(0.75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - 1.5 * IQR
+            upper_bound = Q3 + 1.5 * IQR
+            outlier_mask[col] = (df[col] < lower_bound) | (df[col] > upper_bound)
+        num_outliers = outlier_mask.any(axis=1).sum()
+        if num_outliers == 0:
+            print(f"Aykırı değer kalmadı. Toplam {iteration} adımda temizlendi.")
+            break
+        print(f"Iterasyon {iteration}: {num_outliers} satır silindi.")
+        df = df[~outlier_mask.any(axis=1)]
+    return df
 
-"""
+# veriyi temizle
+df_cleaned = clean_by_iqr(df_combined_df)
 
+# valid_time sütununu datetime formatına çevir (emin olmak için)
+df_cleaned["valid_time"] = pd.to_datetime(df_cleaned["valid_time"])
 
+# Ay bilgisini ekle
+df_cleaned["month"] = df_cleaned["valid_time"].dt.month
 
+# Mevsim bilgisi ((0: Kış, 1: İlkbahar, 2: Yaz, 3: Sonbahar))
+df_cleaned["season"] = df_cleaned["month"] % 12 // 3
+def get_season(month):
+    if month in [12, 1, 2]:
+        return 0
+    elif month in [3, 4, 5]:
+        return 1
+    elif month in [6, 7, 8]:
+        return 2
+    else:
+        return 3
+
+df_cleaned["season"] = df_cleaned["month"].apply(get_season)
+
+# Dairesel mevsimsellik dönüşümleri
+df_cleaned["month_sin"] = np.sin(2 * np.pi * df_cleaned["month"] / 12)
+df_cleaned["month_cos"] = np.cos(2 * np.pi * df_cleaned["month"] / 12)
+
+#Temizlenmiş veriyi CSV olarak kaydet
+df_cleaned.to_csv("combined_data_cleaned_final.csv", index=False)
+print("Mevsimsellik eklendi ve tamamen temizlenmiş veri combined_data_cleaned_final.csv dosyasına kaydedildi.")
 
 # Sonuçları göster
-print(df.head())
-df.info()
-
-# valid_time'ı datetime formatına çevir
-df["valid_time"] = pd.to_datetime(df["valid_time"], errors="coerce")
-
-# Sayısal kolonları belirle
-numeric_cols = ["lat", "lon", "sp", "u10", "v10", "t2m", "tp", "ws"]
-
-# Z-score hesapla ve aykırı değerleri belirle
-z_scores = df[numeric_cols].apply(zscore)  # Her sütun için Z-score hesaplar
-threshold = 3  # Aykırılık eşiği (genellikle 3 kullanılır)
-outliers_mask = (np.abs(z_scores) > threshold).any(axis=1)  # En az bir sütunda aykırı olanları bul
-
-# Aykırı değerleri temizlenmiş yeni DataFrame
-df_cleaned = df[~outliers_mask]  # Aykırı satırları çıkar
-
-# Temizlenmiş veriyi yeni CSV olarak kaydet, datetime formatı bozulmasın!
-df_cleaned.to_csv("hakkari_0_1.csv", index=False, date_format="%Y-%m-%d")
-df_cleaned.info()
-
-"""
+print(df_combined_df.head())
+df_combined_df.info()
